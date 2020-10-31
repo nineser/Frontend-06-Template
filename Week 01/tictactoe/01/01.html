@@ -37,6 +37,7 @@
         border: 1px solid #fff;
         background-color: #f0b6bb;
       }
+
       a {
         color: #000000;
       }
@@ -56,9 +57,8 @@
     </div>
 
     <div id="chessTip">
-      <h3>
-        当前为人机版本，可选择<a href="./01/01.html">&nbsp;&nbsp;试玩版本</a>
-      </h3>
+
+      <h3>当前为试玩版本，可选择<a href="../index.html">&nbsp;&nbsp;人机版本</a></h3>
       <ul></ul>
     </div>
     <!--#fffdd0 #f0b6bb-->
@@ -76,21 +76,28 @@
           chessCells[i].addEventListener("click", () => {
             // 目标格为空，才允许落子
             if (chessbook[i] || gameIsOver) return;
-            moveChess(i); // 玩家移动棋子
+            moveChess(i); // 移动棋子
             gameIsOver = judgeOutcome(chessbook, player); // 判定胜负
+            if (!gameIsOver && willWin(chessbook, 3 - player) !== -1) {
+              logTig(playList[2 - player] + "离胜利仅一步之遥");
+            }
 
             if (!gameIsOver) {
-              //计算机搜索最佳点
+              //console.log(!gameIsOver && bestChoice(chessbook, 3 - player));
               let bestForecast = bestChoice(chessbook, player);
+              console.log(bestForecast);
               let bestPoint = bestForecast.point;
-
+              let bestResult = bestForecast.result;
+              let people = playList[2 - player];
               if (bestPoint === null) {
                 logTig("平局!!!");
                 gameIsOver = true;
               } else {
-                //计算机行最佳点
-                moveChess(bestPoint);
-                gameIsOver = judgeOutcome(chessbook, player); // 判定胜负
+                logTig(
+                  `${people}${forecast[bestResult]}，最佳点位是第${
+                    bestPoint + 1
+                  }个格子`
+                );
               }
             }
           });
@@ -123,6 +130,7 @@
             continue;
           }
           tmp = Object.create(pattern);
+          //tmp = JSON.parse(JSON.stringify(pattern));
           tmp[i] = player;
           let r = bestChoice(tmp, player).result;
           if (-r > result) {
@@ -131,6 +139,7 @@
           }
         }
         if (point === null) {
+          //console.log(result);
           result = 0;
         }
 
@@ -142,6 +151,7 @@
           if (pattern[i]) {
             continue;
           }
+          //let tmp = JSON.parse(JSON.stringify(pattern));
           let tmp = Object.create(pattern);
           tmp[i] = player;
           if (isWin(tmp, player)) {
@@ -161,6 +171,7 @@
               pattern[i + 1] === player ? pattern[i + 2] === player : false;
           }
           if (result) {
+            //console.log(result);
             return true;
           }
         }
