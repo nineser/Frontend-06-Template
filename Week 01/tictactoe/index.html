@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      html {
+        min-width: 440px;
+      }
+      body {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 25px;
+      }
+      #chessboard {
+        background-color: #61b9ff;
+        display: flex;
+        width: 360px;
+        flex-wrap: wrap;
+      }
+      #chessboard div {
+        width: 118px;
+        height: 118px;
+        border: 1px solid white;
+        text-align: center;
+        vertical-align: middle;
+        line-height: 118px;
+        font-size: 48px;
+        color: #fffdd0;
+      }
+      #chessTip {
+        width: 318px;
+        height: 318px;
+        padding: 20px;
+        border: 1px solid #fff;
+        background-color: #f0b6bb;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="chessboard">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+
+    <div id="chessTip">
+      <h3>Tip:</h3>
+      <ul></ul>
+    </div>
+    <!--#fffdd0 #f0b6bb-->
+    <script>
+      let chessbook = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+      let chessNums = chessbook.length;
+      let chessCells = document.getElementById("chessboard").children;
+      let player = 2; // 1黑2白
+      let playList = ["黑子", "白子"];
+      let forecast = { "-1": "可能会输", "0": "能够平局", "1": "能赢" };
+      let gameIsOver = false;
+
+      function drawChessBoard() {
+        for (let i = 0; i < chessNums; ++i) {
+          chessCells[i].addEventListener("click", () => {
+            // 目标格为空，才允许落子
+            if (chessbook[i] || gameIsOver) return;
+            moveChess(i); // 移动棋子
+            gameIsOver = judgeOutcome(chessbook, player); // 判定胜负
+            if (!gameIsOver && willWin(chessbook, 3 - player) !== -1) {
+              logTig(playList[2 - player] + "离胜利仅一步之遥");
+            }
+
+            if (!gameIsOver) {
+              //console.log(!gameIsOver && bestChoice(chessbook, 3 - player));
+              let bestForecast = bestChoice(chessbook, player);
+              console.log(bestForecast);
+              let bestPoint = bestForecast.point;
+              let bestResult = bestForecast.result;
+              let people = playList[2 - player];
+              if (bestPoint === null) {
+                logTig("平局!!!");
+                gameIsOver = true;
+              } else {
+                logTig(
+                  `${people}${forecast[bestResult]}，最佳点位是第${
+                    bestPoint + 1
+                  }个格子`
+                );
+              }
+            }
+          });
+        }
+      }
+
+      function judgeOutcome() {
+        let gameover = false;
+        let result = isWin(chessbook, player);
+        if (result) {
+          logTig(playList[player - 1] + "胜，游戏结束！");
+          gameover = true;
+        }
+        return gameover;
+      }
+
+      function bestChoice(pattern, player) {
+        let point = null;
+        let tmp;
+        player = 3 - player;
+        if ((p = willWin(pattern, player)) !== -1) {
+          return {
+            point: p,
+            result: 1,
+          };
+        }
+        let result = -2;
+        for (let i = 0; i < chessNums; ++i) {
+          if (pattern[i]) {
+            continue;
+          }
+          tmp = Object.create(pattern);
+          //tmp = JSON.parse(JSON.stringify(pattern));
+          tmp[i] = player;
+          let r = bestChoice(tmp, player).result;
+          if (-r > result) {
+            result = -r;
+            point = i;
+          }
+        }
+        if (point === null) {
+          //console.log(result);
+          result = 0;
+        }
+
+        return { point: point, result: result };
+      }
+
+      function willWin(pattern, player) {
+        for (let i = 0; i < pattern.length; ++i) {
+          if (pattern[i]) {
+            continue;
+          }
+          //let tmp = JSON.parse(JSON.stringify(pattern));
+          let tmp = Object.create(pattern);
+          tmp[i] = player;
+          if (isWin(tmp, player)) {
+            return i; //返回能获胜的点位
+          }
+        }
+        return -1; //没有能1步获胜的点位
+      }
+
+      function isWin(pattern, player) {
+        let result = false;
+
+        // 横向判断
+        for (let i = 0; i < chessNums; i = i + 3) {
+          if (pattern[i] === player) {
+            result =
+              pattern[i + 1] === player ? pattern[i + 2] === player : false;
+          }
+          if (result) {
+            //console.log(result);
+            return true;
+          }
+        }
+
+        // 列向判断
+        for (let i = 0; i < chessNums; ++i) {
+          if (pattern[i] === player) {
+            result =
+              pattern[i + 3] === player ? pattern[i + 6] === player : false;
+          }
+          if (result) {
+            return true;
+          }
+        }
+
+        //斜向判断
+        {
+          result =
+            player === pattern[0]
+              ? player === pattern[4]
+                ? player === pattern[8]
+                : false
+              : false;
+          if (result) {
+            //console.log(result);
+            return true;
+          }
+        }
+
+        //斜向判断
+        {
+          result =
+            player === pattern[2]
+              ? player === pattern[4]
+                ? player === pattern[6]
+                : false
+              : false;
+          if (result) {
+            return true;
+          }
+        }
+
+        return false;
+      }
+
+      function moveChess(i) {
+        player = 3 - player; //黑子先行
+        chessCells[i].innerHTML = player == 1 ? "⚫" : player == 2 ? "⚪" : "";
+        chessbook[i] = player; //记录棋谱
+      }
+
+      function logTig(tip) {
+        let tipBoard = document.getElementById("chessTip");
+        let ele = document.createElement("li");
+        ele.innerHTML = `${tip}`;
+        tipBoard.getElementsByTagName("ul")[0].appendChild(ele);
+      }
+      drawChessBoard();
+    </script>
+  </body>
+</html>

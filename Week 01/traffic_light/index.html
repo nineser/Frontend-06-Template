@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      #traffic-light .circle {
+        width: 200px;
+        height: 200px;
+        border: 1px solid #000;
+        border-radius: 50%;
+        display: inline-block;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="traffic-light">
+      <span class="circle"></span>
+      <span class="circle"></span>
+      <span class="circle"></span>
+    </div>
+
+    <script>
+      let trafficLight = document.getElementById("traffic-light").children;
+      let activeOrder = 0;
+
+      async function sleep(duration) {
+        return new Promise(function (resolve, reject) {
+          setTimeout(resolve, duration);
+        });
+      }
+
+      async function lightUp(order, color, duration) {
+        trafficLight[activeOrder].style.backgroundColor = "";
+        activeOrder = order;
+        trafficLight[activeOrder].style.backgroundColor = color;
+        await sleep(duration);
+      }
+      async function main() {
+        while (true) {
+          await lightUp(2, "rgb(0,255,0)", 10000);
+          await lightUp(1, "rgb(255,255,0)", 2000);
+          await lightUp(0, "rgb(255,0,0)", 5000);
+        }
+      }
+      main();
+    </script>
+  </body>
+</html>
