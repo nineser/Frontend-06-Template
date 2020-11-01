@@ -126,6 +126,9 @@
             result: 1,
           };
         }
+        // result : 记录棋局的最终结果
+        // 0 平，1胜，-1负。
+        //此处取任意小于 -1 的值。
         let result = -2;
         for (let i = 0; i < chessNums; ++i) {
           if (pattern[i]) {
