@@ -57,8 +57,9 @@
     </div>
 
     <div id="chessTip">
-
-      <h3>当前为试玩版本，可选择<a href="../index.html">&nbsp;&nbsp;人机版本</a></h3>
+      <h3>
+        当前为试玩版本，可选择<a href="../index.html">&nbsp;&nbsp;人机版本</a>
+      </h3>
       <ul></ul>
     </div>
     <!--#fffdd0 #f0b6bb-->
@@ -119,6 +120,7 @@
         let tmp;
         player = 3 - player;
         if ((p = willWin(pattern, player)) !== -1) {
+          //console.log(p);
           return {
             point: p,
             result: 1,
@@ -132,12 +134,20 @@
           tmp = Object.create(pattern);
           //tmp = JSON.parse(JSON.stringify(pattern));
           tmp[i] = player;
-          let r = bestChoice(tmp, player).result;
+          let opponentBestChoice = bestChoice(tmp, player);
+          let r = opponentBestChoice.result;
+          let p = opponentBestChoice.point;
           if (-r > result) {
             result = -r;
-            point = i;
+            // 若该点能让对手直接赢下比赛，将点位返回
+            if (r === 1) {
+              point = p;
+            } else {
+              point = i;
+            }
           }
         }
+
         if (point === null) {
           //console.log(result);
           result = 0;

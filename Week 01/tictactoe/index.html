@@ -82,6 +82,7 @@
             if (!gameIsOver) {
               //计算机搜索最佳点
               let bestForecast = bestChoice(chessbook, player);
+              //console.log(bestForecast);
               let bestPoint = bestForecast.point;
 
               if (bestPoint === null) {
@@ -124,10 +125,19 @@
           }
           tmp = Object.create(pattern);
           tmp[i] = player;
-          let r = bestChoice(tmp, player).result;
+
+          let opponentBestChoice = bestChoice(tmp, player);
+          let r = opponentBestChoice.result;
+          let p = opponentBestChoice.point;
+
           if (-r > result) {
             result = -r;
-            point = i;
+            // 若该点能让对手直接赢下比赛，将点位返回
+            if (r === 1) {
+              point = p;
+            } else {
+              point = i;
+            }
           }
         }
         if (point === null) {
