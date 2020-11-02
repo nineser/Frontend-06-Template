@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+      }
+      #map,
+      #map .cell {
+        color: #020002;
+      }
+      #map {
+        display: flex;
+        flex-wrap: wrap;
+        width: 600px;
+        height: 601px;
+        border-left: 1px solid;
+        border-top: 1px solid;
+        background-color: #933e09;
+      }
+      #map .cell {
+        width: 5px;
+        height: 5px;
+        border-right: 1px solid;
+        border-bottom: 1px solid;
+      }
+
+      #map .wall {
+        background-color: #000;
+      }
+
+      #tip {
+        margin-left: 50px;
+        height: 20px;
+        background-color: gainsboro;
+        padding: 5px;
+        cursor: default;
+        border-radius: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <!--划线 #2d2a2b-->
+    <!--路径 #2e97e0-->
+    <div id="map"></div>
+    <div id="tip">保存地图</div>
+    <script>
+      let mapEle = document.getElementById("map");
+      let saveBtn = document.getElementById("tip");
+      let mousedown = false,
+        clear = false;
+      let mapArr = localStorage.getItem("mapArr")
+        ? JSON.parse(localStorage.getItem("mapArr"))
+        : Array(10000).fill(0);
+
+      void (() => {
+        let visualMapEle = document.createDocumentFragment();
+
+        for (let i = 0; i < 100; ++i) {
+          for (let j = 0; j < 100; ++j) {
+            let cellEle = document.createElement("span");
+            if (mapArr[i * 100 + j]) {
+              cellEle.classList.add("cell", "wall");
+            } else {
+              cellEle.classList.add("cell");
+            }
+            cellEle.setAttribute("data-id", i * 100 + j);
+            visualMapEle.appendChild(cellEle);
+          }
+        }
+        mapEle.appendChild(visualMapEle);
+      })();
+
+      void (() => {
+        mapEle.addEventListener("mousemove", (e) => {
+          if (mousedown) {
+            let e = window.event || e;
+            let target = e.target || e.srcElement;
+            if (!clear) {
+              target.classList.add("wall");
+              mapArr[target.dataset.id] = 1;
+            } else {
+              target.classList.remove("wall");
+              mapArr[target.dataset.id] = 0;
+            }
+          }
+        });
+
+        document.addEventListener("mousedown", (e) => {
+          mousedown = true;
+          clear = e.which === 3;
+        });
+        document.addEventListener("mouseup", () => {
+          mousedown = false;
+          clear = false;
+        });
+        mapEle.addEventListener("contextmenu", (e) => e.preventDefault());
+        saveBtn.addEventListener("click", () => {
+          localStorage.setItem("mapArr", JSON.stringify(mapArr));
+        });
+      })();
+
+      void (function bfsFindPath(mapArr, start, end) {
+        let queue = [start];
+
+        // 先进先出
+        while (queue.length) {
+          // 出列
+          let [x, y] = queue.shift();
+          console.log(x, y);
+          if (x === end[0] && y === end[1]) {
+            console.log(true);
+            return true;
+          }
+
+          //入列
+          insertCell(x, y - 1);
+          insertCell(x + 1, y);
+          insertCell(x, y + 1);
+          insertCell(x - 1, y);
+        }
+
+        function insertCell(x, y) {
+          if (x < 0 || y < 0 || x > 100 || y > 100) {
+            return;
+          }
+          if (mapArr[y * 100 + x]) {
+            return;
+          }
+          mapArr[y * 100 + x] = 2;
+          queue.push([x, y]);
+        }
+      })(mapArr, [0, 0], [5, 5]); //查找从[0，0] 到 [10,10]
+    </script>
+  </body>
+</html>
