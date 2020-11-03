@@ -66,13 +66,10 @@
         for (let i = 0; i < 100; ++i) {
           for (let j = 0; j < 100; ++j) {
             let cellEle = document.createElement("span");
-            
-            if (!mapArr[i * 100 + j]) {
-              cellEle.classList.add("cell");
-            } else if (mapArr[i * 100 + j] === 1) {
+
+            if (mapArr[i * 100 + j]) {
               cellEle.classList.add("cell", "wall");
             } else {
-              mapArr[i * 100 + j] = 0;
               cellEle.classList.add("cell");
             }
 
@@ -113,43 +110,60 @@
       })();
 
       async function bfsFindPath(mapArr, start, end) {
+        //为防止修改地图数据后，重新加载数据需要做额外的判断，
+        //对地图数组进行复制。
+        let map = Object.create(mapArr);
         let queue = [start];
+        console.log(mapArr);
 
         // 先进先出
         while (queue.length) {
           // 出列
           let [x, y] = queue.shift();
           if (x === end[0] && y === end[1]) {
-            console.log(true);
+            let pathArr = [];
+            while (x !== start[0] || y !== start[1]) {
+              pathArr.push(map[y * 100 + x]);
+              [x, y] = map[y * 100 + x];
 
-            mapEle.children[y * 100 + x].style.backgroundColor = "#2fff7e";
-            return true;
+              await sleep(5);
+              mapEle.children[y * 100 + x].style.backgroundColor = "#2fff7e";
+            }
+            console.log("终点有路可达");
+            return pathArr;
           }
 
           //入列
-          await insertCell(x, y - 1);
-          await insertCell(x + 1, y);
-          await insertCell(x, y + 1);
-          await insertCell(x - 1, y);
+          await insertCell(x, y - 1, [x, y]);
+          await insertCell(x + 1, y, [x, y]);
+          await insertCell(x, y + 1, [x, y]);
+          await insertCell(x - 1, y, [x, y]);
+
+          await insertCell(x - 1, y - 1, [x, y]);
+          await insertCell(x + 1, y - 1, [x, y]);
+          await insertCell(x - 1, y + 1, [x, y]);
+          await insertCell(x + 1, y + 1, [x, y]);
         }
 
-        async function insertCell(x, y) {
-          if (x < 0 || y < 0 || x > 100 || y > 100) {
+        async function insertCell(x, y, pre) {
+          if (x < 0 || y < 0 || x >= 100 || y >= 100) {
             return;
           }
-          if (mapArr[y * 100 + x]) {
+          if (map[y * 100 + x]) {
             return;
           }
-          await sleep(20);
+
+          await sleep(1);
           mapEle.children[y * 100 + x].classList.add("way");
-          mapArr[y * 100 + x] = 2;
+          map[y * 100 + x] = pre;
           queue.push([x, y]);
         }
 
-        return false;
+        console.log("终点无路可达");
+        return null;
       }
 
-      bfsFindPath(mapArr, [0, 0], [50, 40]); //查找从[0，0] 到 [10,10]
+      bfsFindPath(mapArr, [0, 0], [90, 80]);
       function sleep(duration) {
         return new Promise((resolve, reject) => {
           setTimeout(resolve, duration);
