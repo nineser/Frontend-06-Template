@@ -6,10 +6,15 @@
 - Array(1000) 和 new Array(1000) 的区别
   - 简单来说，简单应用上无区别；如果是代码复杂量高的，通过第一种可以节省部分时间，因为 new 需要调用 new 对象的构造器进行赋值查找。
 - 插入 html 元素 与 插入 html 元素片段
-  - ```javascript
-    ```
+
+```javascript
+let visualMapEle = document.createDocumentFragment();
+let cellEle = document.createElement("span");
+mapEle.appendChild(visualMapEle);
+```
+
 - 广度优先搜索寻路
-  - 使用队列
+  - 数据结构可以使用队列
   * 入列
     - queue 放入 start
     * 第一遍循环
@@ -24,3 +29,5 @@
       - 走到这，那就说明它是新节点，则将其值标记为 2
       - push 推入队列
   - push 和 shift 改为 push pop 就是深度优先搜索
+  - 数据结构更优的选择为使用二叉堆
+
