@@ -8,6 +8,8 @@
       body {
         display: flex;
         justify-content: center;
+        flex-wrap: wrap;
+        min-width: 635px;
       }
       #map,
       #map .cell {
@@ -33,48 +35,47 @@
         background-color: #000;
       }
 
-      #tip {
-        margin-left: 50px;
+      .tool #save,
+      .tool #reset {
+        margin: 15px 50px;
         height: 20px;
         background-color: gainsboro;
         padding: 5px;
         cursor: default;
         border-radius: 3px;
+        cursor: pointer;
       }
     </style>
   </head>
   <body>
-    <!--划线 #2d2a2b-->
-    <!--路径 #2e97e0-->
     <div id="map"></div>
-    <div id="tip">保存地图</div>
+    <div class="tool">
+      <div id="save">保存地图</div>
+      <div id="reset">重置地图</div>
+    </div>
     <script>
       let mapEle = document.getElementById("map");
-      let saveBtn = document.getElementById("tip");
+      let saveBtn = document.getElementById("save");
+      let resetBtn = document.getElementById("reset");
+
       let mousedown = false,
         clear = false;
       let mapArr = localStorage.getItem("mapArr")
         ? JSON.parse(localStorage.getItem("mapArr"))
         : Array(10000).fill(0);
 
+      /*初始化地图*/
       void (() => {
-        let visualMapEle = document.createDocumentFragment();
-
-        for (let i = 0; i < 100; ++i) {
-          for (let j = 0; j < 100; ++j) {
-            let cellEle = document.createElement("span");
-            if (mapArr[i * 100 + j]) {
-              cellEle.classList.add("cell", "wall");
-            } else {
-              cellEle.classList.add("cell");
-            }
-            cellEle.setAttribute("data-id", i * 100 + j);
-            visualMapEle.appendChild(cellEle);
-          }
-        }
-        mapEle.appendChild(visualMapEle);
+        drwaMap(mapArr);
       })();
 
+      /*寻路调用*/
+      void (() => {
+        // 起始点为 (0,0),终点为(5,5)
+        bfsFindPath(mapArr, [0, 0], [5, 5]);
+      })();
+
+      /*绘图相关事件*/
       void (() => {
         mapEle.addEventListener("mousemove", (e) => {
           if (mousedown) {
@@ -98,13 +99,40 @@
           mousedown = false;
           clear = false;
         });
+      })();
+
+      /*工具栏相关事件*/
+      void (() => {
         mapEle.addEventListener("contextmenu", (e) => e.preventDefault());
         saveBtn.addEventListener("click", () => {
           localStorage.setItem("mapArr", JSON.stringify(mapArr));
+          alert("地图保存成功");
+        });
+        resetBtn.addEventListener("click", () => {
+          mapEle.innerHTML = "";
+          mapArr = Array(10000).fill(0);
+          drwaMap(mapArr);
         });
       })();
 
-      void (function bfsFindPath(mapArr, start, end) {
+      function drwaMap(mapData) {
+        let visualMapEle = document.createDocumentFragment();
+        for (let i = 0; i < 100; ++i) {
+          for (let j = 0; j < 100; ++j) {
+            let cellEle = document.createElement("span");
+            if (mapData[i * 100 + j]) {
+              cellEle.classList.add("cell", "wall");
+            } else {
+              cellEle.classList.add("cell");
+            }
+            cellEle.setAttribute("data-id", i * 100 + j);
+            visualMapEle.appendChild(cellEle);
+          }
+        }
+        mapEle.appendChild(visualMapEle);
+      }
+
+      function bfsFindPath(mapArr, start, end) {
         let queue = [start];
 
         // 先进先出
@@ -113,7 +141,7 @@
           let [x, y] = queue.shift();
           console.log(x, y);
           if (x === end[0] && y === end[1]) {
-            console.log(true);
+            console.log(`终点可达`);
             return true;
           }
 
@@ -134,7 +162,8 @@
           mapArr[y * 100 + x] = 2;
           queue.push([x, y]);
         }
-      })(mapArr, [0, 0], [5, 5]); //查找从[0，0] 到 [10,10]
+        return false;
+      }
     </script>
   </body>
 </html>
