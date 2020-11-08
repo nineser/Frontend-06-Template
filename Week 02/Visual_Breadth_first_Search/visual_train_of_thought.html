@@ -34,6 +34,9 @@
       #map .wall {
         background-color: #000;
       }
+      #map .way {
+        background-color: #fff;
+      }
 
       .tool #save,
       .tool #reset {
@@ -67,6 +70,12 @@
       /*初始化地图*/
       void (() => {
         drwaMap(mapArr);
+      })();
+
+      /*寻路调用*/
+      void (() => {
+        // 起始点为 (0,0),终点为(5,5)
+        bfsFindPath(mapArr, [0, 0], [50, 40]);
       })();
 
       /*绘图相关事件*/
@@ -124,6 +133,49 @@
           }
         }
         mapEle.appendChild(visualMapEle);
+      }
+
+      async function bfsFindPath(mapArr, start, end) {
+        let queue = [start];
+
+        // 先进先出
+        while (queue.length) {
+          // 出列
+          let [x, y] = queue.shift();
+          if (x === end[0] && y === end[1]) {
+            console.log(true);
+
+            mapEle.children[y * 100 + x].style.backgroundColor = "#2fff7e";
+            return true;
+          }
+
+          //入列
+          await insertCell(x, y - 1);
+          await insertCell(x + 1, y);
+          await insertCell(x, y + 1);
+          await insertCell(x - 1, y);
+        }
+
+        async function insertCell(x, y) {
+          if (x < 0 || y < 0 || x >= 100 || y >= 100) {
+            return;
+          }
+          if (mapArr[y * 100 + x]) {
+            return;
+          }
+          await sleep(2);
+          mapEle.children[y * 100 + x].classList.add("way");
+          mapArr[y * 100 + x] = 2;
+          queue.push([x, y]);
+        }
+
+        return false;
+      }
+
+      function sleep(duration) {
+        return new Promise((resolve, reject) => {
+          setTimeout(resolve, duration);
+        });
       }
     </script>
   </body>
