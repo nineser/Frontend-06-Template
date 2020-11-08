@@ -3,11 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>启发式BFC寻路</title>
     <style>
       body {
         display: flex;
         justify-content: center;
+        flex-wrap: wrap;
+        min-width: 635px;
       }
       #map,
       #map .cell {
@@ -36,50 +38,43 @@
         background-color: #fff;
       }
 
-      #tip {
-        margin-left: 50px;
+      .tool .btn {
+        margin: 15px 50px;
         height: 20px;
         background-color: gainsboro;
         padding: 5px;
         cursor: default;
         border-radius: 3px;
+        cursor: pointer;
       }
     </style>
   </head>
   <body>
-    <!--划线 #2d2a2b-->
-    <!--路径 #2e97e0-->
     <div id="map"></div>
-    <div id="tip">保存地图</div>
+    <div class="tool">
+      <div id="save" class="btn">保存地图</div>
+      <div id="reset" class="btn">重置地图</div>
+      <div id="start" class="btn">启动寻路</div>
+    </div>
     <script>
       let mapEle = document.getElementById("map");
-      let saveBtn = document.getElementById("tip");
+      let saveBtn = document.getElementById("save");
+      let resetBtn = document.getElementById("reset");
+      let startBtn = document.getElementById("start");
+
       let mousedown = false,
-        clear = false;
+        clear = false,
+        isFinding = 0;
       let mapArr = localStorage.getItem("mapArr")
         ? JSON.parse(localStorage.getItem("mapArr"))
         : Array(10000).fill(0);
 
+      /*初始化地图*/
       void (() => {
-        let visualMapEle = document.createDocumentFragment();
-
-        for (let i = 0; i < 100; ++i) {
-          for (let j = 0; j < 100; ++j) {
-            let cellEle = document.createElement("span");
-
-            if (mapArr[i * 100 + j]) {
-              cellEle.classList.add("cell", "wall");
-            } else {
-              cellEle.classList.add("cell");
-            }
-
-            cellEle.setAttribute("data-id", i * 100 + j);
-            visualMapEle.appendChild(cellEle);
-          }
-        }
-        mapEle.appendChild(visualMapEle);
+        drwaMap(mapArr);
       })();
 
+      /*绘图相关事件*/
       void (() => {
         mapEle.addEventListener("mousemove", (e) => {
           if (mousedown) {
@@ -103,11 +98,46 @@
           mousedown = false;
           clear = false;
         });
+      })();
+
+      /*工具栏相关事件*/
+      void (() => {
         mapEle.addEventListener("contextmenu", (e) => e.preventDefault());
         saveBtn.addEventListener("click", () => {
+          if (isFinding) return;
           localStorage.setItem("mapArr", JSON.stringify(mapArr));
+          alert("地图保存成功");
+        });
+        resetBtn.addEventListener("click", () => {
+          if (isFinding) return;
+          mapEle.innerHTML = "";
+          mapArr = Array(10000).fill(0);
+          drwaMap(mapArr);
+        });
+        startBtn.addEventListener("click", () => {
+          if (isFinding) return;
+          isFinding = true;
+          // 查询 0，0 至 50，40 的路线
+          bfsFindPath(mapArr, [0, 0], [50, 40]);
         });
       })();
+
+      function drwaMap(mapData) {
+        let visualMapEle = document.createDocumentFragment();
+        for (let i = 0; i < 100; ++i) {
+          for (let j = 0; j < 100; ++j) {
+            let cellEle = document.createElement("span");
+            if (mapData[i * 100 + j]) {
+              cellEle.classList.add("cell", "wall");
+            } else {
+              cellEle.classList.add("cell");
+            }
+            cellEle.setAttribute("data-id", i * 100 + j);
+            visualMapEle.appendChild(cellEle);
+          }
+        }
+        mapEle.appendChild(visualMapEle);
+      }
 
       async function bfsFindPath(mapArr, start, end) {
         //为防止修改地图数据后，重新加载数据需要做额外的判断，
@@ -129,6 +159,7 @@
               mapEle.children[y * 100 + x].style.backgroundColor = "#2fff7e";
             }
             console.log("终点有路可达");
+            isFinding = false;
             return pathArr;
           }
 
@@ -166,10 +197,9 @@
         }
 
         console.log("终点无路可达");
+        isFinding = false;
         return null;
       }
-
-      //bfsFindPath(mapArr, [0, 0], [90, 80]);
 
       class Sorted {
         constructor(data, compare) {
@@ -199,6 +229,7 @@
           this.data.push(val);
         }
       }
+
       function sleep(duration) {
         return new Promise((resolve, reject) => {
           setTimeout(resolve, duration);
