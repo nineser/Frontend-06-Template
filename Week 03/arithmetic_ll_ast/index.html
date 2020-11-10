@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      const regexp = /([0-9\.]+)|([ \t]+)|([\r\n]+)|(\*)|(\/)|(\+)|(\-)/g;
+
+      //token name
+      //for convenience, the order is the same as regexp's。
+      const dictionary = [
+        "Number",
+        "Whitespace",
+        "LineTerminator",
+        "*",
+        "/",
+        "+",
+        "-",
+      ];
+
+      function* tokenize(source) {
+        let str = source;
+        let result = null;
+        let preIndex = regexp.lastIndex;
+
+        while ((result = regexp.exec(str)) !== null) {
+          try {
+            if (regexp.lastIndex - preIndex > result[0].length) {
+              throw "String contains unrecognizable characters;";
+            }
+          } catch (err) {
+            console.warn(err);
+            break;
+          }
+          preIndex = regexp.lastIndex;
+
+          let token = {
+            type: null,
+            value: null,
+          };
+
+          for (let i = 1; i <= dictionary.length; ++i) {
+            if (result[i]) {
+              token.type = dictionary[i - 1];
+              break;
+            }
+          }
+          token.value = result[0];
+          yield token;
+        }
+        yield {
+          type: "EOF",
+        };
+      }
+
+      // 每次输出都会调用一次 tokenize 函数
+      for (const token of tokenize("88 + 180 * 8")) {
+        console.log(token);
+      }
+    </script>
+  </body>
+</html>
