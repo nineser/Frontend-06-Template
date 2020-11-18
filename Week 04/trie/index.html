@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      class Trie {
+        constructor() {
+          this.$ = Symbol("$");
+          this.root = Object.create(null);
+        }
+        insert(word) {
+          let tree = this.root;
+          const $ = this.$;
+
+          //插入单词的字符
+          for (const c of word) {
+            if (!tree[c]) {
+              tree[c] = Object.create(null);
+            }
+            tree = tree[c];
+          }
+
+          //插入单词的信息
+          if (!tree[$]) {
+            tree[$] = Object.create(null);
+            tree[$].repeat = 0; // 出现次数
+            tree[$].length = word.length; // 单词长度
+          }
+          tree[$].repeat++;
+        }
+
+        most(root) {
+          const $ = this.$;
+          let maximum = 0;
+          let maxword = "";
+          let visit = (node, word) => {
+            if (node[$] && node[$].repeat > maximum) {
+              maximum = node[$].repeat;
+              maxword = word;
+            }
+            for (const c in node) {
+              visit(node[c], word + c);
+            }
+          };
+          visit(this.root, maxword);
+          return `${maximum} ${maxword}`;
+        }
+      }
+
+      void (() => {
+        let trie = new Trie();
+        const wordLen = 4;
+        for (let i = 0; i < 100000; ++i) {
+          trie.insert(randomWord(wordLen));
+        }
+        console.log(trie.most());
+      })();
+
+      function randomWord(length) {
+        let s = "";
+        for (let i = 0; i < length; ++i) {
+          s += String.fromCharCode(Math.random() * 26 + "a".charCodeAt(0));
+        }
+        return s;
+      }
+    </script>
+  </body>
+</html>
