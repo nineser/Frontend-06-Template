@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      const obj = {
+        a: { c: 3, d: 3 },
+        b: 2,
+      };
+
+      const watchAttr = [];
+      //[[obj,attr]]
+      const callbacks = new Map();
+      //{obj:{prop:[cb1,cb2,cb3...]}}
+      const cachePxy = new Map();
+
+      const effect = (cb) => {
+        watchAttr.length = 0;
+        cb();
+        for (const obj of watchAttr) {
+          let o = obj[0];
+          let prop = obj[1];
+          if (!callbacks.has(o)) {
+            callbacks.set(o, new Map());
+          }
+          if (!callbacks.get(o).has(prop)) {
+            callbacks.get(o).set(prop, []);
+          }
+          callbacks.get(o).get(prop).push(cb);
+        }
+      };
+
+      const pxy = (target) => {
+        if (cachePxy.has(target)) {
+          console.log("skip");
+          return cachePxy.get(target);
+        }
+        let proxy = new Proxy(target, {
+          set: function (target, prop, value) {
+            target[prop] = value;
+            // target 发生改变后，调用回调函数
+            if (callbacks.has(target)) {
+              if (callbacks.get(target).get(prop)) {
+                for (const cb of callbacks.get(target).get(prop)) {
+                  console.log(prop, "changed！！！");
+                  cb();
+                }
+              }
+            }
+
+            return target[prop];
+          },
+          get: function (target, prop) {
+            watchAttr.push([target, prop]);
+
+            if (typeof target[prop] === "object") {
+              return pxy(target[prop]);
+            }
+
+            return target[prop];
+          },
+        });
+
+        console.log(proxy);
+        cachePxy.set(target, proxy);
+        return proxy;
+      };
+
+      const pxyOfObj = pxy(obj);
+      effect(() => {
+        console.log(pxyOfObj.a.c);
+        console.log(pxyOfObj.a.d);
+      });
+    </script>
+  </body>
+</html>
