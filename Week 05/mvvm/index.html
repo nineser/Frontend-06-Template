@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <input type="range" min="0" max="255" name="" id="r" />
+    <input type="range" min="0" max="255" name="" id="g" />
+    <input type="range" min="0" max="255" name="" id="b" />
+    <div id="board">color <br />board</div>
+    <script>
+      const watchAttr = [];
+      //[[obj,attr]]
+      const callbacks = new Map();
+      //{obj:{prop:[cb1,cb2,cb3...]}}
+      const cachePxy = new Map();
+
+      const effect = (cb) => {
+        watchAttr.length = 0;
+        cb();
+        for (const obj of watchAttr) {
+          let o = obj[0];
+          let prop = obj[1];
+          if (!callbacks.has(o)) {
+            callbacks.set(o, new Map());
+          }
+          if (!callbacks.get(o).has(prop)) {
+            callbacks.get(o).set(prop, []);
+          }
+          callbacks.get(o).get(prop).push(cb);
+        }
+      };
+
+      const pxy = (target) => {
+        if (cachePxy.has(target)) {
+          console.log("skip");
+          return cachePxy.get(target);
+        }
+        let proxy = new Proxy(target, {
+          set: function (target, prop, value) {
+            target[prop] = value;
+            // target 发生改变后，调用回调函数
+            if (callbacks.has(target)) {
+              if (callbacks.get(target).get(prop)) {
+                for (const cb of callbacks.get(target).get(prop)) {
+                  console.log(prop, "changed！！！");
+                  cb();
+                }
+              }
+            }
+
+            return target[prop];
+          },
+          get: function (target, prop) {
+            watchAttr.push([target, prop]);
+
+            if (typeof target[prop] === "object") {
+              return pxy(target[prop]);
+            }
+
+            return target[prop];
+          },
+        });
+
+        cachePxy.set(target, proxy);
+        return proxy;
+      };
+
+      const color = {
+        r: 0,
+        g: 0,
+        b: 0,
+      };
+      const po = pxy(color);
+
+      const board = document.getElementById("board");
+      const colorR = document.getElementById("r");
+      const colorG = document.getElementById("g");
+      const colorB = document.getElementById("b");
+      colorR.addEventListener("input", function (e) {
+        po.r = e.target.value;
+      });
+      colorG.addEventListener("input", function (e) {
+        po.g = e.target.value;
+      });
+      colorB.addEventListener("input", function (e) {
+        po.b = e.target.value;
+      });
+      effect(() => {
+        colorR.value = po.r;
+      });
+      effect(() => {
+        colorB.value = po.b;
+      });
+      effect(() => {
+        colorG.value = po.g;
+      });
+      effect(() => {
+        board.style.background = `rgba(${po.r},${po.g} ,${po.b})`;
+      });
+    </script>
+  </body>
+</html>
