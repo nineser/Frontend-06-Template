@@ -231,8 +231,7 @@ void (async function () {
     body: { name: "hanabi" },
   };
   let request = new Request(obj);
-  const response = await request.send();
-  console.log(response);
-  const dom = parser.parseHTML(response.body);
-  console.log(dom);
+  let response = await request.send();
+  let dom = parser.parseHTML(response.body);
+  console.log(JSON.stringify(dom, null, "   "));
 })();

@@ -21,24 +21,22 @@ const server = http.createServer((req, res) => {
       //res.statusCode = 200;
       //res.setHeader("Content-Type", "text/html");
       res.writeHead(200, { "Content-Type": "text/html" });
-      res.end(`<!DOCTYPE HTML>
-                <html>
-                <head>
-                <style type="text/css">
-                h1 {color:red}
-                p {color:blue}
-                </style>
-                </head>
-                <body>
-
-                <video width="320" height="240" controls="controls">
-                  <source src="/i/movie.ogg" type="video/ogg">
-                  <source src="/i/movie.mp4" type="video/mp4">
-                Your browser does not support the video tag.
-                </video>
-
-                </body>
-              </html>`);
+      res.end(`<!DOCTYPE HTML><html><head>
+<style type="text/css">
+h1 {color:red}
+p {color:blue}
+div #a{color: green}
+div .red{color:red}
+</style>
+</head>
+<body>
+<div><span id="a" class="red">abc</span></div>
+<h1>color red</h1><p>color blue</p>
+<video width="320" height="240" controls="controls">
+<source src="/i/movie.ogg" type="video/ogg">
+<source src="/i/movie.mp4" type="video/mp4">
+Your browser does not support the video tag.</video>
+</body></html>`);
     });
 });
 
